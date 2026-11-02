@@ -1,0 +1,335 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>A Flower for Parul</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Gaegu:wght@400;700&display=swap">
+<style>
+/* Layout: a single sunny screen. The note sits left, and the flower grows up from the bottom edge. */
+:root {
+  --sun: #ffd84d;
+  --ink: #4a1942;
+  --petal-deep: #f0386b;
+  --petal: #ff5c8a;
+  --petal-light: #ffa3bd;
+  --heart: #ffc42e;
+  --seed: #e8890c;
+  --leaf: #2e9e5b;
+  --leaf-dark: #1f7a45;
+  --font-display: "Bagel Fat One", "Arial Rounded MT Bold", "Trebuchet MS", sans-serif;
+  --font-note: "Gaegu", "Comic Sans MS", "Segoe Print", cursive;
+  color-scheme: light;
+}
+html, body { height: 100%; }
+body {
+  background: var(--sun);
+  color: var(--ink);
+  font-family: var(--font-note);
+  overflow-x: hidden;
+}
+.page {
+  min-height: 100%;
+  max-width: 1040px;
+  margin-inline: auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+  gap: 24px;
+  align-items: end;
+}
+.note {
+  min-width: 0;
+  align-self: center;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 18px;
+  padding-block: 32px;
+}
+h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(3.4rem, 10vw, 6.2rem);
+  line-height: 0.98;
+  color: var(--petal-deep);
+  text-wrap: balance;
+}
+.line {
+  margin: 0;
+  max-width: 22ch;
+  min-height: 2.3em;
+  font-size: clamp(1.7rem, 4vw, 2.3rem);
+  font-weight: 700;
+  line-height: 1.15;
+}
+button {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  color: var(--sun);
+  background: var(--ink);
+  border: 0;
+  border-radius: 999px;
+  padding: 13px 26px;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+button:hover { transform: rotate(-2deg) scale(1.04); }
+button:active { transform: scale(0.96); }
+button:focus-visible { outline: 3px solid var(--petal-deep); outline-offset: 3px; }
+.fact {
+  margin: 0;
+  max-width: 34ch;
+  font-size: 1.25rem;
+  line-height: 1.25;
+}
+.stage { min-width: 0; align-self: end; }
+canvas {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  aspect-ratio: 5 / 6;
+  max-height: 92vh;
+  margin-inline: auto;
+  cursor: pointer;
+}
+@media (max-width: 720px) {
+  .page { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .note { padding-block: 28px 8px; gap: 12px; }
+  .line { min-height: 0; max-width: none; }
+  .fact { font-size: 1.15rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  button { transition: none; }
+}
+</style>
+
+<main class="page">
+  <section class="note">
+    <h1>Hey Parul!</h1>
+
+    <button id="more" style="Display:none;" type="button"></button>
+  
+  </section>
+  <div class="stage">
+    <canvas id="flower" role="img" aria-label="A big pink flower with a smiling yellow face, growing on a green stem"></canvas>
+  </div>
+</main>
+
+<script>
+(function () {
+  var canvas = document.getElementById('flower');
+  var ctx = canvas.getContext('2d');
+  var lineEl = document.getElementById('line');
+  var W = 600, H = 720, HEAD_X = 300, HEAD_Y = 285;
+  var css = getComputedStyle(document.documentElement);
+  function token(name) { return css.getPropertyValue(name).trim(); }
+  var color = {
+    ink: token('--ink'), deep: token('--petal-deep'), petal: token('--petal'),
+    light: token('--petal-light'), heart: token('--heart'), seed: token('--seed'),
+    leaf: token('--leaf'), leafDark: token('--leaf-dark')
+  };
+  var layers = [
+    { count: 14, length: 232, width: 64, turn: 0, delay: 0.5, fill: color.deep },
+    { count: 14, length: 192, width: 54, turn: Math.PI / 14, delay: 0.75, fill: color.petal },
+    { count: 11, length: 142, width: 44, turn: 0.1, delay: 1, fill: color.light }
+  ];
+  var lines = [
+    'Be happy and keep smiling.',
+    'That smile suits you. Keep it on.',
+    'Today is a good day to be cheerful.',
+    'Your friend is smiling just thinking of you.',
+    'Go on, one more smile.'
+  ];
+  var lineIndex = 0;
+  var still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var start = performance.now();
+  var wiggle = 0, grin = 0, falling = [];
+
+  function resize() {
+    var box = canvas.getBoundingClientRect();
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = Math.round(box.width * dpr);
+    canvas.height = Math.round(box.width * dpr * H / W);
+    if (still) draw(99);
+  }
+
+  function clamp(v) { return Math.max(0, Math.min(1, v)); }
+  function backOut(v) {
+    var k = 1.7, p = v - 1;
+    return 1 + (k + 1) * p * p * p + k * p * p;
+  }
+
+  function petal(length, width, fill) {
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.bezierCurveTo(width, -length * 0.35, width * 0.85, -length * 0.95, 0, -length);
+    ctx.bezierCurveTo(-width * 0.85, -length * 0.95, -width, -length * 0.35, 0, 0);
+    ctx.fillStyle = fill;
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(74, 25, 66, 0.14)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(0, -length * 0.3);
+    ctx.lineTo(0, -length * 0.82);
+    ctx.stroke();
+  }
+
+  function leaf(x, y, angle, size) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(angle);
+    ctx.scale(size, size);
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.bezierCurveTo(45, -30, 120, -34, 165, 0);
+    ctx.bezierCurveTo(115, 34, 45, 30, 0, 0);
+    ctx.fillStyle = color.leaf;
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(8, 0);
+    ctx.lineTo(148, 0);
+    ctx.strokeStyle = color.leafDark;
+    ctx.lineWidth = 3;
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function face(scale, time) {
+    ctx.save();
+    ctx.translate(HEAD_X, HEAD_Y);
+    ctx.scale(scale, scale);
+    ctx.beginPath();
+    ctx.arc(0, 0, 84, 0, Math.PI * 2);
+    ctx.fillStyle = color.heart;
+    ctx.fill();
+
+    ctx.fillStyle = color.seed;
+    for (var i = 0; i < 150; i++) {
+      var r = 3.9 * Math.sqrt(i + 330);
+      if (r > 81) break;
+      var a = i * 2.39996;
+      ctx.beginPath();
+      ctx.arc(Math.cos(a) * r, Math.sin(a) * r, 2.3, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    var blink = (time % 4.2) > 4.05 ? 0.12 : 1;
+    ctx.fillStyle = color.ink;
+    [-25, 25].forEach(function (x) {
+      ctx.beginPath();
+      ctx.ellipse(x, -13, 7, 9 * blink, 0, 0, Math.PI * 2);
+      ctx.fill();
+    });
+    ctx.fillStyle = color.light;
+    [-41, 41].forEach(function (x) {
+      ctx.beginPath();
+      ctx.ellipse(x, 11, 11, 7, 0, 0, Math.PI * 2);
+      ctx.fill();
+    });
+    var mouth = 25 + 7 * grin;
+    ctx.beginPath();
+    ctx.moveTo(-mouth, 13);
+    ctx.quadraticCurveTo(0, 42 + 16 * grin, mouth, 13);
+    ctx.lineCap = 'round';
+    ctx.lineWidth = 6;
+    ctx.strokeStyle = color.ink;
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function draw(time) {
+    ctx.setTransform(canvas.width / W, 0, 0, canvas.width / W, 0, 0);
+    ctx.clearRect(0, 0, W, H);
+
+    var sway = still ? 0 : Math.sin(time * 0.9) * 0.02 + Math.sin(time * 9) * 0.05 * wiggle;
+    var stemGrow = backOut(clamp(time / 0.8));
+    ctx.save();
+    ctx.translate(300, H);
+    ctx.rotate(sway);
+    ctx.translate(-300, -H);
+
+    ctx.beginPath();
+    ctx.moveTo(300, H + 8);
+    ctx.quadraticCurveTo(270, 520, 300, HEAD_Y);
+    ctx.strokeStyle = color.leaf;
+    ctx.lineWidth = 18;
+    ctx.lineCap = 'round';
+    ctx.stroke();
+
+    var leafSize = backOut(clamp((time - 0.3) / 0.7));
+    if (leafSize > 0) {
+      leaf(286, 640, -0.42, leafSize);
+      leaf(284, 590, Math.PI + 0.42, leafSize * 0.9);
+    }
+
+    layers.forEach(function (layer) {
+      var open = backOut(clamp((time - layer.delay) / 0.7));
+      if (open <= 0) return;
+      for (var i = 0; i < layer.count; i++) {
+        ctx.save();
+        ctx.translate(HEAD_X, HEAD_Y);
+        ctx.rotate(layer.turn + i / layer.count * Math.PI * 2);
+        petal(layer.length * open, layer.width * open, layer.fill);
+        ctx.restore();
+      }
+    });
+    face(Math.min(stemGrow, backOut(clamp((time - 0.2) / 0.7))), time);
+    ctx.restore();
+
+    falling.forEach(function (p) {
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.spin);
+      petal(40, 12, p.fill);
+      ctx.restore();
+    });
+  }
+
+  function frame(now) {
+    var time = (now - start) / 1000;
+    wiggle *= 0.965;
+    grin *= 0.992;
+    falling = falling.filter(function (p) {
+      p.x += p.driftX + Math.sin(p.y * 0.02) * 0.9;
+      p.y += p.driftY;
+      p.spin += p.turn;
+      return p.y < H + 50;
+    });
+    draw(time);
+    requestAnimationFrame(frame);
+  }
+
+  function celebrate() {
+    lineIndex = (lineIndex + 1) % lines.length;
+    lineEl.textContent = lines[lineIndex];
+    grin = 1;
+    if (still) { draw(99); return; }
+    wiggle = 1;
+    var fills = [color.deep, color.petal, color.light];
+    for (var i = 0; i < 22; i++) {
+      falling.push({
+        x: HEAD_X + (Math.random() - 0.5) * 340,
+        y: HEAD_Y + (Math.random() - 0.5) * 240,
+        driftX: (Math.random() - 0.5) * 1.4,
+        driftY: 1.6 + Math.random() * 2.2,
+        spin: Math.random() * Math.PI * 2,
+        turn: (Math.random() - 0.5) * 0.09,
+        fill: fills[i % 3]
+      });
+    }
+  }
+
+  document.getElementById('more').addEventListener('click', celebrate);
+  canvas.addEventListener('click', celebrate);
+  window.addEventListener('resize', resize);
+  resize();
+  if (still) draw(99); else requestAnimationFrame(frame);
+})();
+</script>
+
+</body></html>
